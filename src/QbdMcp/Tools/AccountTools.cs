@@ -33,4 +33,35 @@ public static class AccountTools
                 return list;
             });
     }
+
+    [McpServerTool, Description("Get the balance of a specific account in QuickBooks Desktop.")]
+    public static string GetAccountBalance(
+        QuickBooksService qb,
+        [Description("Account name to look up")] string accountName)
+    {
+        return qb.SendQuery<IAccountRetList>(
+            req =>
+            {
+                var query = req.AppendAccountQueryRq();
+                var nameFilter = query.ORAccountListQuery.AccountListFilter.ORNameFilter.NameFilter;
+                nameFilter.Name.SetValue(accountName);
+                nameFilter.MatchCriterion.SetValue(ENMatchCriterion.mcContains);
+            },
+            accounts =>
+            {
+                var list = new List<object>();
+                for (int i = 0; i < accounts.Count; i++)
+                {
+                    var acct = accounts.GetAt(i);
+                    list.Add(new
+                    {
+                        Name = acct.Name?.GetValue(),
+                        FullName = acct.FullName?.GetValue(),
+                        Type = acct.AccountType?.GetValue().ToString(),
+                        Balance = acct.Balance?.GetValue()
+                    });
+                }
+                return list;
+            });
+    }
 }
