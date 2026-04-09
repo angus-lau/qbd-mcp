@@ -10,6 +10,7 @@ builder.Logging.AddConsole(options =>
     options.LogToStandardErrorThreshold = LogLevel.Trace;
 });
 
+builder.Services.AddSingleton<ConfigService>();
 builder.Services.AddSingleton<QuickBooksService>();
 
 builder.Services

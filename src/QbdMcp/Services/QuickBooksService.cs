@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using QBFC13Lib;
 
@@ -10,6 +11,9 @@ public class QuickBooksService : IDisposable
 
     private readonly object _lock = new();
     private QBSessionManager? _sessionManager;
+    private string _activeCompanyFile = "";
+
+    public string ActiveCompanyFile => _activeCompanyFile;
 
     private void EnsureConnected()
     {
@@ -17,7 +21,17 @@ public class QuickBooksService : IDisposable
 
         _sessionManager = new QBSessionManager();
         _sessionManager.OpenConnection("QbdMcp", "QuickBooks Desktop MCP Server");
-        _sessionManager.BeginSession("", ENOpenMode.omDontCare);
+        _sessionManager.BeginSession(_activeCompanyFile, ENOpenMode.omDontCare);
+    }
+
+    public void SwitchCompanyFile(string companyFilePath)
+    {
+        lock (_lock)
+        {
+            DisconnectInternal();
+            _activeCompanyFile = companyFilePath;
+            EnsureConnected();
+        }
     }
 
     public IResponse SendRequest(Action<IMsgSetRequest> buildRequest)
@@ -26,10 +40,18 @@ public class QuickBooksService : IDisposable
         {
             EnsureConnected();
 
-            var requestSet = _sessionManager!.CreateMsgSetRequest("US", 13, 0);
-            buildRequest(requestSet);
-            var response = _sessionManager.DoRequests(requestSet);
-            return response.ResponseList.GetAt(0);
+            try
+            {
+                var requestSet = _sessionManager!.CreateMsgSetRequest("US", 13, 0);
+                buildRequest(requestSet);
+                var response = _sessionManager.DoRequests(requestSet);
+                return response.ResponseList.GetAt(0);
+            }
+            catch (COMException)
+            {
+                _sessionManager = null;
+                throw;
+            }
         }
     }
 
@@ -47,15 +69,20 @@ public class QuickBooksService : IDisposable
         return JsonSerializer.Serialize(items, JsonOptions);
     }
 
+    private void DisconnectInternal()
+    {
+        if (_sessionManager == null) return;
+
+        _sessionManager.EndSession();
+        _sessionManager.CloseConnection();
+        _sessionManager = null;
+    }
+
     public void Disconnect()
     {
         lock (_lock)
         {
-            if (_sessionManager == null) return;
-
-            _sessionManager.EndSession();
-            _sessionManager.CloseConnection();
-            _sessionManager = null;
+            DisconnectInternal();
         }
     }
 
