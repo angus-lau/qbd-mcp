@@ -34,6 +34,18 @@ public class QuickBooksService : IDisposable
         }
     }
 
+    public string ActiveCompanyFile
+    {
+        get
+        {
+            lock (_lock)
+            {
+                EnsureConnected();
+                return _sessionManager!.ActiveCompanyFileName;
+            }
+        }
+    }
+
     public IResponse SendRequest(Action<IMsgSetRequest> buildRequest)
     {
         lock (_lock)
