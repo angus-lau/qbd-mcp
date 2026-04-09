@@ -104,6 +104,57 @@ public static class BillTools
         }, QuickBooksService.JsonOptions);
     }
 
+    [McpServerTool, Description("List bills from QuickBooks Desktop.")]
+    public static string ListBills(
+        QuickBooksService qb,
+        [Description("Maximum number of bills to return")] int maxReturned = 25,
+        [Description("Filter by vendor name (partial match, case-insensitive)")] string? vendorName = null,
+        [Description("Filter by paid status: 'paidonly', 'notpaidonly', or leave blank for all")] string? paidStatus = null)
+    {
+        return qb.SendQuery<IBillRetList>(
+            req =>
+            {
+                var query = req.AppendBillQueryRq();
+                query.MaxReturned.SetValue(maxReturned);
+
+                if (!string.IsNullOrEmpty(paidStatus))
+                {
+                    var status = paidStatus.ToLowerInvariant() switch
+                    {
+                        "paidonly" => ENPaidStatus.psPaidOnly,
+                        "notpaidonly" => ENPaidStatus.psNotPaidOnly,
+                        _ => ENPaidStatus.psAll
+                    };
+                    query.PaidStatus.SetValue(status);
+                }
+            },
+            bills =>
+            {
+                var list = new List<object>();
+                for (int i = 0; i < bills.Count; i++)
+                {
+                    var bill = bills.GetAt(i);
+                    var vendor = bill.VendorRef?.FullName?.GetValue();
+
+                    if (!string.IsNullOrEmpty(vendorName) &&
+                        (vendor == null || !vendor.Contains(vendorName, StringComparison.OrdinalIgnoreCase)))
+                        continue;
+
+                    list.Add(new
+                    {
+                        TxnID = bill.TxnID?.GetValue(),
+                        Vendor = vendor,
+                        RefNumber = bill.RefNumber?.GetValue(),
+                        Date = bill.TxnDate?.GetValue().ToString("yyyy-MM-dd"),
+                        DueDate = bill.DueDate?.GetValue().ToString("yyyy-MM-dd"),
+                        AmountDue = bill.AmountDue?.GetValue(),
+                        IsPaid = bill.IsPaid?.GetValue()
+                    });
+                }
+                return list;
+            });
+    }
+
     private class BillLineItem
     {
         public string AccountName { get; set; } = "";
