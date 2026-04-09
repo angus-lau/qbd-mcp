@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
 using ModelContextProtocol.Server;
-using QBFC16Lib;
+using Interop.QBFC17;
 using QbdMcp.Models;
 using QbdMcp.Services;
 

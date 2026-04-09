@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
 using ModelContextProtocol.Server;
-using QBFC16Lib;
+using Interop.QBFC17;
 using QbdMcp.Models;
 using QbdMcp.Services;
 
@@ -17,7 +17,7 @@ public static class InvoiceTools
         [Description("Maximum number of invoices to return")] int maxReturned = 25)
     {
         return qb.SendQuery<IInvoiceRetList>(
-            req => req.AppendInvoiceQueryRq().MaxReturned.SetValue(maxReturned),
+            req => req.AppendInvoiceQueryRq().ORInvoiceQuery.InvoiceFilter.MaxReturned.SetValue(maxReturned),
             invoices =>
             {
                 var list = new List<object>();
@@ -106,9 +106,9 @@ public static class InvoiceTools
             req =>
             {
                 var query = req.AppendInvoiceQueryRq();
-                query.MaxReturned.SetValue(maxReturned);
-                query.PaidStatus.SetValue(ENPaidStatus.psNotPaidOnly);
-                query.ORInvoiceQuery.InvoiceFilter.ORDateRangeFilter.DueDateRangeFilter.ToDueDateFilter.SetValue(DateTime.Today.AddDays(-1));
+                var filter = query.ORInvoiceQuery.InvoiceFilter;
+                filter.MaxReturned.SetValue(maxReturned);
+                filter.PaidStatus.SetValue(ENPaidStatus.psNotPaidOnly);
             },
             invoices =>
             {

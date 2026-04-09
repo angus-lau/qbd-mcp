@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
 using ModelContextProtocol.Server;
-using QBFC16Lib;
+using Interop.QBFC17;
 using QbdMcp.Services;
 
 namespace QbdMcp.Tools;
@@ -82,16 +82,16 @@ public static class ReportTools
             {
                 var colData = dataRow.ColDataList.GetAt(j);
                 string key;
-                if (reportRet.ColDescs != null && j < reportRet.ColDescs.Count)
+                if (reportRet.ColDescList != null && j < reportRet.ColDescList.Count)
                 {
-                    var colDesc = reportRet.ColDescs.GetAt(j);
-                    key = colDesc.ColTitle?.GetValue() ?? $"Col{j}";
+                    var colDesc = reportRet.ColDescList.GetAt(j);
+                    key = colDesc.ColTitleList?.Count > 0 ? colDesc.ColTitleList.GetAt(0).value?.GetValue() ?? $"Col{j}" : $"Col{j}";
                 }
                 else
                 {
                     key = $"Col{j}";
                 }
-                row[key] = colData.Value?.GetValue();
+                row[key] = colData.value?.GetValue();
             }
 
             rows.Add(row);

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using ModelContextProtocol.Server;
-using QBFC16Lib;
+using Interop.QBFC17;
 using QbdMcp.Services;
 
 namespace QbdMcp.Tools;
@@ -14,7 +14,7 @@ public static class AccountTools
         [Description("Maximum number of accounts to return")] int maxReturned = 50)
     {
         return qb.SendQuery<IAccountRetList>(
-            req => req.AppendAccountQueryRq().MaxReturned.SetValue(maxReturned),
+            req => req.AppendAccountQueryRq().ORAccountListQuery.AccountListFilter.MaxReturned.SetValue(maxReturned),
             accounts =>
             {
                 var list = new List<object>();

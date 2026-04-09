@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
 using ModelContextProtocol.Server;
-using QBFC16Lib;
+using Interop.QBFC17;
 using QbdMcp.Models;
 using QbdMcp.Services;
 
@@ -84,7 +84,7 @@ public static class BillTools
             payment.TxnDate.SetValue(parsedDate);
 
             if (!string.IsNullOrEmpty(refNumber))
-                payment.RefNumber.SetValue(refNumber);
+                payment.ORCheckPrint.RefNumber.SetValue(refNumber);
 
             var applied = payment.AppliedToTxnAddList.Append();
             applied.TxnID.SetValue(billTxnId);
@@ -116,7 +116,8 @@ public static class BillTools
             req =>
             {
                 var query = req.AppendBillQueryRq();
-                query.MaxReturned.SetValue(maxReturned);
+                var filter = query.ORBillQuery.BillFilter;
+                filter.MaxReturned.SetValue(maxReturned);
 
                 if (!string.IsNullOrEmpty(paidStatus))
                 {
@@ -126,7 +127,7 @@ public static class BillTools
                         "notpaidonly" => ENPaidStatus.psNotPaidOnly,
                         _ => ENPaidStatus.psAll
                     };
-                    query.PaidStatus.SetValue(status);
+                    filter.PaidStatus.SetValue(status);
                 }
             },
             bills =>

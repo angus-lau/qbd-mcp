@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using QBFC16Lib;
+using Interop.QBFC17;
 
 namespace QbdMcp.Services;
 
@@ -51,7 +51,7 @@ public class QuickBooksService : IDisposable
 
             try
             {
-                var requestSet = _sessionManager!.CreateMsgSetRequest("US", 16, 0);
+                var requestSet = _sessionManager!.CreateMsgSetRequest("US", 17, 0);
                 buildRequest(requestSet);
                 var response = _sessionManager.DoRequests(requestSet);
                 return response.ResponseList.GetAt(0);

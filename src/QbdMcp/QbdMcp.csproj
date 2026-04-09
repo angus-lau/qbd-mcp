@@ -18,12 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <COMReference Include="QBFC16Lib">
-      <WrapperTool>tlbimp</WrapperTool>
-      <VersionMinor>0</VersionMinor>
-      <VersionMajor>1</VersionMajor>
-      <Guid>B22FA6C6-1339-4B24-8614-E11B6340AA8E</Guid>
-    </COMReference>
+    <Reference Include="Interop.QBFC17">
+      <HintPath>C:\Program Files\Common Files\Intuit\QuickBooks\Interop.QBFC17.dll</HintPath>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </Reference>
   </ItemGroup>
 
 </Project>

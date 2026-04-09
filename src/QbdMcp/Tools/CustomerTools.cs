@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using ModelContextProtocol.Server;
-using QBFC16Lib;
+using Interop.QBFC17;
 using QbdMcp.Services;
 
 namespace QbdMcp.Tools;
@@ -14,7 +14,7 @@ public static class CustomerTools
         [Description("Maximum number of customers to return")] int maxReturned = 25)
     {
         return qb.SendQuery<ICustomerRetList>(
-            req => req.AppendCustomerQueryRq().MaxReturned.SetValue(maxReturned),
+            req => req.AppendCustomerQueryRq().ORCustomerListQuery.CustomerListFilter.MaxReturned.SetValue(maxReturned),
             customers =>
             {
                 var list = new List<object>();

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using ModelContextProtocol.Server;
-using QBFC16Lib;
+using Interop.QBFC17;
 using QbdMcp.Services;
 
 namespace QbdMcp.Tools;
@@ -14,7 +14,7 @@ public static class VendorTools
         [Description("Maximum number of vendors to return")] int maxReturned = 25)
     {
         return qb.SendQuery<IVendorRetList>(
-            req => req.AppendVendorQueryRq().MaxReturned.SetValue(maxReturned),
+            req => req.AppendVendorQueryRq().ORVendorListQuery.VendorListFilter.MaxReturned.SetValue(maxReturned),
             vendors =>
             {
                 var list = new List<object>();

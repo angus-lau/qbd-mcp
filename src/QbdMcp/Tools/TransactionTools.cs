@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
 using ModelContextProtocol.Server;
-using QBFC16Lib;
+using Interop.QBFC17;
 using QbdMcp.Services;
 
 namespace QbdMcp.Tools;
@@ -111,16 +111,20 @@ public static class TransactionTools
             var result = qb.SendRequest(req =>
             {
                 var q = req.AppendInvoiceQueryRq();
-                q.MaxReturned.SetValue(maxReturned);
+                var filter = q.ORInvoiceQuery.InvoiceFilter;
+                filter.MaxReturned.SetValue(maxReturned);
                 if (parsedFrom.HasValue || parsedTo.HasValue)
                 {
                     if (parsedFrom.HasValue)
-                        q.ORInvoiceQuery.InvoiceFilter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateRange.FromTxnDate.SetValue(parsedFrom.Value);
+                        filter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateFilter.FromTxnDate.SetValue(parsedFrom.Value);
                     if (parsedTo.HasValue)
-                        q.ORInvoiceQuery.InvoiceFilter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateRange.ToTxnDate.SetValue(parsedTo.Value);
+                        filter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateFilter.ToTxnDate.SetValue(parsedTo.Value);
                 }
                 if (!string.IsNullOrEmpty(refNumber))
-                    q.ORInvoiceQuery.InvoiceFilter.RefNumberList.Add(refNumber);
+                {
+                    filter.ORRefNumberFilter.RefNumberFilter.RefNumber.SetValue(refNumber);
+                    filter.ORRefNumberFilter.RefNumberFilter.MatchCriterion.SetValue(ENMatchCriterion.mcStartsWith);
+                }
             });
 
             if (result.StatusCode == 0 && result.Detail is IInvoiceRetList invoiceList)
@@ -148,16 +152,20 @@ public static class TransactionTools
             var result = qb.SendRequest(req =>
             {
                 var q = req.AppendBillQueryRq();
-                q.MaxReturned.SetValue(maxReturned);
+                var filter = q.ORBillQuery.BillFilter;
+                filter.MaxReturned.SetValue(maxReturned);
                 if (parsedFrom.HasValue || parsedTo.HasValue)
                 {
                     if (parsedFrom.HasValue)
-                        q.ORBillQuery.BillFilter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateRange.FromTxnDate.SetValue(parsedFrom.Value);
+                        filter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateFilter.FromTxnDate.SetValue(parsedFrom.Value);
                     if (parsedTo.HasValue)
-                        q.ORBillQuery.BillFilter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateRange.ToTxnDate.SetValue(parsedTo.Value);
+                        filter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateFilter.ToTxnDate.SetValue(parsedTo.Value);
                 }
                 if (!string.IsNullOrEmpty(refNumber))
-                    q.ORBillQuery.BillFilter.RefNumberList.Add(refNumber);
+                {
+                    filter.ORRefNumberFilter.RefNumberFilter.RefNumber.SetValue(refNumber);
+                    filter.ORRefNumberFilter.RefNumberFilter.MatchCriterion.SetValue(ENMatchCriterion.mcStartsWith);
+                }
             });
 
             if (result.StatusCode == 0 && result.Detail is IBillRetList billList)
@@ -185,16 +193,20 @@ public static class TransactionTools
             var result = qb.SendRequest(req =>
             {
                 var q = req.AppendCheckQueryRq();
-                q.MaxReturned.SetValue(maxReturned);
+                var filter = q.ORTxnQuery.TxnFilter;
+                filter.MaxReturned.SetValue(maxReturned);
                 if (parsedFrom.HasValue || parsedTo.HasValue)
                 {
                     if (parsedFrom.HasValue)
-                        q.ORCheckQuery.CheckFilter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateRange.FromTxnDate.SetValue(parsedFrom.Value);
+                        filter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateFilter.FromTxnDate.SetValue(parsedFrom.Value);
                     if (parsedTo.HasValue)
-                        q.ORCheckQuery.CheckFilter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateRange.ToTxnDate.SetValue(parsedTo.Value);
+                        filter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateFilter.ToTxnDate.SetValue(parsedTo.Value);
                 }
                 if (!string.IsNullOrEmpty(refNumber))
-                    q.ORCheckQuery.CheckFilter.RefNumberList.Add(refNumber);
+                {
+                    filter.ORRefNumberFilter.RefNumberFilter.RefNumber.SetValue(refNumber);
+                    filter.ORRefNumberFilter.RefNumberFilter.MatchCriterion.SetValue(ENMatchCriterion.mcStartsWith);
+                }
             });
 
             if (result.StatusCode == 0 && result.Detail is ICheckRetList checkList)
@@ -222,16 +234,20 @@ public static class TransactionTools
             var result = qb.SendRequest(req =>
             {
                 var q = req.AppendSalesReceiptQueryRq();
-                q.MaxReturned.SetValue(maxReturned);
+                var filter = q.ORTxnQuery.TxnFilter;
+                filter.MaxReturned.SetValue(maxReturned);
                 if (parsedFrom.HasValue || parsedTo.HasValue)
                 {
                     if (parsedFrom.HasValue)
-                        q.ORSalesReceiptQuery.SalesReceiptFilter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateRange.FromTxnDate.SetValue(parsedFrom.Value);
+                        filter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateFilter.FromTxnDate.SetValue(parsedFrom.Value);
                     if (parsedTo.HasValue)
-                        q.ORSalesReceiptQuery.SalesReceiptFilter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateRange.ToTxnDate.SetValue(parsedTo.Value);
+                        filter.ORDateRangeFilter.TxnDateRangeFilter.ORTxnDateRangeFilter.TxnDateFilter.ToTxnDate.SetValue(parsedTo.Value);
                 }
                 if (!string.IsNullOrEmpty(refNumber))
-                    q.ORSalesReceiptQuery.SalesReceiptFilter.RefNumberList.Add(refNumber);
+                {
+                    filter.ORRefNumberFilter.RefNumberFilter.RefNumber.SetValue(refNumber);
+                    filter.ORRefNumberFilter.RefNumberFilter.MatchCriterion.SetValue(ENMatchCriterion.mcStartsWith);
+                }
             });
 
             if (result.StatusCode == 0 && result.Detail is ISalesReceiptRetList srList)
@@ -271,8 +287,9 @@ public static class TransactionTools
         var invoiceResult = qb.SendRequest(req =>
         {
             var q = req.AppendInvoiceQueryRq();
-            q.PaidStatus.SetValue(ENPaidStatus.psNotPaidOnly);
-            q.MaxReturned.SetValue(999);
+            var filter = q.ORInvoiceQuery.InvoiceFilter;
+            filter.PaidStatus.SetValue(ENPaidStatus.psNotPaidOnly);
+            filter.MaxReturned.SetValue(999);
         });
 
         if (invoiceResult.StatusCode == 0 && invoiceResult.Detail is IInvoiceRetList invoiceList)
@@ -292,8 +309,9 @@ public static class TransactionTools
         var billResult = qb.SendRequest(req =>
         {
             var q = req.AppendBillQueryRq();
-            q.PaidStatus.SetValue(ENPaidStatus.psNotPaidOnly);
-            q.MaxReturned.SetValue(999);
+            var filter = q.ORBillQuery.BillFilter;
+            filter.PaidStatus.SetValue(ENPaidStatus.psNotPaidOnly);
+            filter.MaxReturned.SetValue(999);
         });
 
         if (billResult.StatusCode == 0 && billResult.Detail is IBillRetList billList)
@@ -323,8 +341,7 @@ public static class TransactionTools
         "creditmemo" => ENTxnVoidType.tvtCreditMemo,
         "journalentry" => ENTxnVoidType.tvtJournalEntry,
         "billpaymentcheck" => ENTxnVoidType.tvtBillPaymentCheck,
-        "receivepayment" => ENTxnVoidType.tvtReceivePayment,
-        _ => throw new ArgumentException($"Unknown transaction type '{type}'. Valid types: Invoice, Bill, Check, SalesReceipt, CreditMemo, JournalEntry, BillPaymentCheck, ReceivePayment.")
+        _ => throw new ArgumentException($"Unknown transaction type '{type}'. Valid types: Invoice, Bill, Check, SalesReceipt, CreditMemo, JournalEntry, BillPaymentCheck.")
     };
 
     private static ENTxnDelType ParseTxnDelType(string type) => type.ToLowerInvariant() switch
