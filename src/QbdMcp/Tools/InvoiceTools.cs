@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Globalization;
+using System.Text.Json;
 using ModelContextProtocol.Server;
 using QBFC13Lib;
 using QbdMcp.Services;
@@ -37,6 +39,63 @@ public static class InvoiceTools
             });
     }
 
+    [McpServerTool, Description("Create an invoice in QuickBooks Desktop.")]
+    public static string CreateInvoice(
+        QuickBooksService qb,
+        [Description("Customer name exactly as it appears in QuickBooks")] string customerName,
+        [Description("Invoice date in YYYY-MM-DD format")] string date,
+        [Description("Due date in YYYY-MM-DD format")] string dueDate,
+        [Description("Line items as JSON array: [{\"itemName\": \"...\", \"description\": \"...\", \"rate\": 100.00, \"quantity\": 1}]")] string lineItemsJson,
+        [Description("Optional invoice/reference number")] string? refNumber = null)
+    {
+        if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+            return "Error: Invalid date format. Use YYYY-MM-DD.";
+        if (!DateTime.TryParseExact(dueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDueDate))
+            return "Error: Invalid due date format. Use YYYY-MM-DD.";
+
+        var lineItems = JsonSerializer.Deserialize<List<InvoiceLineItem>>(lineItemsJson, QuickBooksService.JsonInputOptions);
+        if (lineItems == null || lineItems.Count == 0)
+            return "Error: At least one line item is required.";
+
+        var result = qb.SendRequest(req =>
+        {
+            var invoice = req.AppendInvoiceAddRq();
+            invoice.CustomerRef.FullName.SetValue(customerName);
+            invoice.TxnDate.SetValue(parsedDate);
+            invoice.DueDate.SetValue(parsedDueDate);
+
+            if (!string.IsNullOrEmpty(refNumber))
+                invoice.RefNumber.SetValue(refNumber);
+
+            foreach (var item in lineItems)
+            {
+                var line = invoice.ORInvoiceLineAddList.Append().InvoiceLineAdd;
+                if (!string.IsNullOrEmpty(item.ItemName))
+                    line.ItemRef.FullName.SetValue(item.ItemName);
+                if (!string.IsNullOrEmpty(item.Description))
+                    line.Desc.SetValue(item.Description);
+                if (item.Rate.HasValue)
+                    line.ORRatePriceLevel.Rate.SetValue(item.Rate.Value);
+                if (item.Quantity.HasValue)
+                    line.Quantity.SetValue(item.Quantity.Value);
+            }
+        });
+
+        if (result.StatusCode != 0)
+            return $"Error: {result.StatusMessage}";
+
+        var invoiceRet = (IInvoiceRet)result.Detail;
+        return JsonSerializer.Serialize(new
+        {
+            Status = "Created",
+            TxnID = invoiceRet.TxnID.GetValue(),
+            RefNumber = invoiceRet.RefNumber?.GetValue(),
+            Customer = invoiceRet.CustomerRef.FullName.GetValue(),
+            Date = invoiceRet.TxnDate.GetValue().ToString("yyyy-MM-dd"),
+            Total = invoiceRet.Subtotal?.GetValue()
+        }, QuickBooksService.JsonOptions);
+    }
+
     [McpServerTool, Description("Get overdue invoices from QuickBooks Desktop.")]
     public static string GetOverdueInvoices(
         QuickBooksService qb,
@@ -69,5 +128,13 @@ public static class InvoiceTools
                 }
                 return list;
             });
+    }
+
+    private class InvoiceLineItem
+    {
+        public string? ItemName { get; set; }
+        public string? Description { get; set; }
+        public double? Rate { get; set; }
+        public double? Quantity { get; set; }
     }
 }
