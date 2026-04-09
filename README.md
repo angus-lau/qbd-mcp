@@ -34,7 +34,7 @@ MCP server that connects Claude Desktop to QuickBooks Desktop.
 
 ## Building from Source
 
-Requires .NET 8 SDK and QuickBooks Desktop SDK (QBFC13) installed.
+Requires .NET 8 SDK and QuickBooks Desktop SDK (QBFC16) installed.
 
 ```bash
 dotnet publish src/QbdMcp/QbdMcp.csproj -c Release

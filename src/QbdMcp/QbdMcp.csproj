@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <COMReference Include="QBFC13Lib">
+    <COMReference Include="QBFC16Lib">
       <WrapperTool>tlbimp</WrapperTool>
       <VersionMinor>0</VersionMinor>
       <VersionMajor>1</VersionMajor>
