@@ -20,6 +20,18 @@ public class QuickBooksService : IDisposable
         _sessionManager.BeginSession("", ENOpenMode.omDontCare);
     }
 
+    public string ActiveCompanyFile
+    {
+        get
+        {
+            lock (_lock)
+            {
+                EnsureConnected();
+                return _sessionManager!.ActiveCompanyFileName;
+            }
+        }
+    }
+
     public IResponse SendRequest(Action<IMsgSetRequest> buildRequest)
     {
         lock (_lock)
