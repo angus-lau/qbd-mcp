@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using ModelContextProtocol.Server;
 using QBFC13Lib;
+using QbdMcp.Models;
 using QbdMcp.Services;
 
 namespace QbdMcp.Tools;
@@ -24,7 +25,7 @@ public static class BillTools
         if (!DateTime.TryParseExact(dueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDueDate))
             return "Error: Invalid due date format. Use YYYY-MM-DD.";
 
-        var lineItems = JsonSerializer.Deserialize<List<BillLineItem>>(lineItemsJson, QuickBooksService.JsonInputOptions);
+        var lineItems = JsonSerializer.Deserialize<List<ExpenseLine>>(lineItemsJson, QuickBooksService.JsonInputOptions);
         if (lineItems == null || lineItems.Count == 0)
             return "Error: At least one line item is required.";
 
@@ -153,12 +154,5 @@ public static class BillTools
                 }
                 return list;
             });
-    }
-
-    private class BillLineItem
-    {
-        public string AccountName { get; set; } = "";
-        public double Amount { get; set; }
-        public string? Description { get; set; }
     }
 }

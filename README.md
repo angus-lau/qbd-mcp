@@ -42,6 +42,48 @@ dotnet publish src/QbdMcp/QbdMcp.csproj -c Release
 
 Output: `src/QbdMcp/bin/Release/net8.0-windows/win-x64/publish/QbdMcp.exe`
 
-## Available Tools
+## Available Tools (24)
 
-24 tools across 6 categories: connection management, lookups, data entry, edit/void, search, and reports. Ask Claude "what can you do with QuickBooks?" to see the full list.
+### Connection Management
+| Tool | Description |
+|------|-------------|
+| `ListCompanyFiles` | List available company files from config |
+| `SwitchCompanyFile` | Switch to a different company file |
+
+### Lookups
+| Tool | Description |
+|------|-------------|
+| `ListCustomers` | List customers |
+| `GetCustomer` | Search customer by name |
+| `ListVendors` | List vendors |
+| `GetVendor` | Search vendor by name |
+| `ListInvoices` | List recent invoices |
+| `GetOverdueInvoices` | Unpaid invoices past due date |
+| `ListAccounts` | Chart of accounts with balances |
+| `GetAccountBalance` | Balance for a specific account |
+| `ListBills` | List bills with vendor/status filters |
+| `GetClientSummary` | AR/AP totals, overdue count |
+| `SearchTransactions` | Search across invoices, bills, checks, sales receipts |
+
+### Data Entry
+| Tool | Description |
+|------|-------------|
+| `CreateBill` | Enter a bill with expense line items |
+| `PayBill` | Pay a bill by cheque |
+| `CreateInvoice` | Create an invoice with line items |
+| `ReceivePayment` | Record a customer payment |
+| `MakeCheque` | Write a cheque for direct payment |
+| `CreateSalesReceipt` | Record a direct sale |
+| `CreateJournalEntry` | Create a general journal entry |
+
+### Edit/Void
+| Tool | Description |
+|------|-------------|
+| `VoidTransaction` | Void a transaction |
+| `DeleteTransaction` | Delete a transaction |
+
+### Reports
+| Tool | Description |
+|------|-------------|
+| `GetTrialBalance` | Trial balance for a date range |
+| `GetGeneralLedger` | General ledger for a date range |

@@ -89,15 +89,19 @@ public static class TransactionTools
         DateTime? parsedFrom = null;
         DateTime? parsedTo = null;
 
-        if (fromDate != null && !DateTime.TryParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var pFrom))
-            return "Error: Invalid fromDate format. Use YYYY-MM-DD.";
-        else if (fromDate != null)
-            parsedFrom = DateTime.ParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        if (fromDate != null)
+        {
+            if (!QuickBooksService.TryParseDate(fromDate, out var pFrom, out var err))
+                return err;
+            parsedFrom = pFrom;
+        }
 
-        if (toDate != null && !DateTime.TryParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var pTo))
-            return "Error: Invalid toDate format. Use YYYY-MM-DD.";
-        else if (toDate != null)
-            parsedTo = DateTime.ParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        if (toDate != null)
+        {
+            if (!QuickBooksService.TryParseDate(toDate, out var pTo, out var err))
+                return err;
+            parsedTo = pTo;
+        }
 
         var allResults = new List<object>();
 
@@ -136,7 +140,7 @@ public static class TransactionTools
                 }
             }
         }
-        catch { /* skip failures */ }
+        catch (Exception ex) { Console.Error.WriteLine($"SearchTransactions query failed: {ex.Message}"); }
 
         // Bills
         try
@@ -173,7 +177,7 @@ public static class TransactionTools
                 }
             }
         }
-        catch { /* skip failures */ }
+        catch (Exception ex) { Console.Error.WriteLine($"SearchTransactions query failed: {ex.Message}"); }
 
         // Checks
         try
@@ -210,7 +214,7 @@ public static class TransactionTools
                 }
             }
         }
-        catch { /* skip failures */ }
+        catch (Exception ex) { Console.Error.WriteLine($"SearchTransactions query failed: {ex.Message}"); }
 
         // SalesReceipts
         try
@@ -247,7 +251,7 @@ public static class TransactionTools
                 }
             }
         }
-        catch { /* skip failures */ }
+        catch (Exception ex) { Console.Error.WriteLine($"SearchTransactions query failed: {ex.Message}"); }
 
         if (allResults.Count == 0)
             return "No transactions found.";

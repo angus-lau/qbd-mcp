@@ -34,16 +34,13 @@ public class QuickBooksService : IDisposable
         }
     }
 
-    public string ActiveCompanyFile
+    public static bool TryParseDate(string input, out DateTime result, out string error)
     {
-        get
-        {
-            lock (_lock)
-            {
-                EnsureConnected();
-                return _sessionManager!.ActiveCompanyFileName;
-            }
-        }
+        error = "";
+        if (DateTime.TryParseExact(input, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out result))
+            return true;
+        error = $"Error: Invalid date format '{input}'. Use YYYY-MM-DD.";
+        return false;
     }
 
     public IResponse SendRequest(Action<IMsgSetRequest> buildRequest)

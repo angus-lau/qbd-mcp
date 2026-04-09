@@ -6,7 +6,6 @@ namespace QbdMcp.Services;
 public class ConfigService
 {
     private readonly AppConfig _config;
-    private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
     public ConfigService()
     {
@@ -27,7 +26,7 @@ public class ConfigService
                 }
             };
 
-            File.WriteAllText(configPath, JsonSerializer.Serialize(_config, _jsonOptions));
+            File.WriteAllText(configPath, JsonSerializer.Serialize(_config, QuickBooksService.JsonOptions));
         }
         else
         {

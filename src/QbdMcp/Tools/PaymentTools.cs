@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using ModelContextProtocol.Server;
 using QBFC13Lib;
+using QbdMcp.Models;
 using QbdMcp.Services;
 
 namespace QbdMcp.Tools;
@@ -164,20 +165,5 @@ public static class PaymentTools
             Total = receiptRet.Subtotal.GetValue(),
             Date = receiptRet.TxnDate.GetValue().ToString("yyyy-MM-dd")
         }, QuickBooksService.JsonOptions);
-    }
-
-    private class ExpenseLine
-    {
-        public string AccountName { get; set; } = "";
-        public double Amount { get; set; }
-        public string? Description { get; set; }
-    }
-
-    private class SalesLineItem
-    {
-        public string? ItemName { get; set; }
-        public string? Description { get; set; }
-        public double? Rate { get; set; }
-        public double? Quantity { get; set; }
     }
 }
