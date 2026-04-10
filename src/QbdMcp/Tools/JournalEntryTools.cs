@@ -10,9 +10,10 @@ namespace QbdMcp.Tools;
 [McpServerToolType]
 public static class JournalEntryTools
 {
-    [McpServerTool, Description("Create a general journal entry in QuickBooks Desktop.")]
+    [McpServerTool, Description("Create a general journal entry in QuickBooks Desktop. Account names are fuzzy-matched.")]
     public static string CreateJournalEntry(
         QuickBooksService qb,
+        NameResolver resolver,
         [Description("Journal entry date in YYYY-MM-DD format")] string date,
         [Description("Journal lines as JSON array: [{\"accountName\": \"...\", \"amount\": 100.00, \"type\": \"debit\", \"memo\": \"...\"}]")] string linesJson,
         [Description("Optional reference number")] string? refNumber = null)
@@ -23,6 +24,15 @@ public static class JournalEntryTools
         var lines = JsonSerializer.Deserialize<List<JournalLine>>(linesJson, QuickBooksService.JsonInputOptions);
         if (lines == null || lines.Count == 0)
             return "Error: At least one journal line is required.";
+
+        // Resolve account names
+        foreach (var line in lines)
+        {
+            var acctResult = resolver.ResolveAccount(line.AccountName);
+            if (!acctResult.Success)
+                return acctResult.ErrorMessage!;
+            line.AccountName = acctResult.ResolvedName;
+        }
 
         double totalDebit = 0;
         double totalCredit = 0;

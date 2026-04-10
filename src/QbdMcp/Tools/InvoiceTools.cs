@@ -40,15 +40,20 @@ public static class InvoiceTools
             });
     }
 
-    [McpServerTool, Description("Create an invoice in QuickBooks Desktop.")]
+    [McpServerTool, Description("Create an invoice in QuickBooks Desktop. Customer name is fuzzy-matched.")]
     public static string CreateInvoice(
         QuickBooksService qb,
-        [Description("Customer name exactly as it appears in QuickBooks")] string customerName,
+        NameResolver resolver,
+        [Description("Customer name (partial match OK)")] string customerName,
         [Description("Invoice date in YYYY-MM-DD format")] string date,
         [Description("Due date in YYYY-MM-DD format")] string dueDate,
         [Description("Line items as JSON array: [{\"itemName\": \"...\", \"description\": \"...\", \"rate\": 100.00, \"quantity\": 1}]")] string lineItemsJson,
         [Description("Optional invoice/reference number")] string? refNumber = null)
     {
+        var customerResult = resolver.ResolveCustomer(customerName);
+        if (!customerResult.Success)
+            return customerResult.ErrorMessage!;
+
         if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
             return "Error: Invalid date format. Use YYYY-MM-DD.";
         if (!DateTime.TryParseExact(dueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDueDate))
@@ -61,7 +66,7 @@ public static class InvoiceTools
         var result = qb.SendRequest(req =>
         {
             var invoice = req.AppendInvoiceAddRq();
-            invoice.CustomerRef.FullName.SetValue(customerName);
+            invoice.CustomerRef.FullName.SetValue(customerResult.ResolvedName);
             invoice.TxnDate.SetValue(parsedDate);
             invoice.DueDate.SetValue(parsedDueDate);
 

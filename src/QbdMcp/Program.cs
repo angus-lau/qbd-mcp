@@ -12,6 +12,7 @@ builder.Logging.AddConsole(options =>
 
 builder.Services.AddSingleton<ConfigService>();
 builder.Services.AddSingleton<QuickBooksService>();
+builder.Services.AddSingleton<NameResolver>();
 
 builder.Services
     .AddMcpServer()

@@ -11,29 +11,43 @@ namespace QbdMcp.Tools;
 [McpServerToolType]
 public static class PaymentTools
 {
-    [McpServerTool, Description("Receive a customer payment in QuickBooks Desktop.")]
+    [McpServerTool, Description("Receive a customer payment in QuickBooks Desktop. Customer name is fuzzy-matched.")]
     public static string ReceivePayment(
         QuickBooksService qb,
-        [Description("Customer name exactly as it appears in QuickBooks")] string customerName,
+        NameResolver resolver,
+        [Description("Customer name (partial match OK)")] string customerName,
         [Description("Total payment amount")] double amount,
         [Description("Payment date in YYYY-MM-DD format")] string date,
         [Description("Payment method (e.g. Cash, Cheque, Visa)")] string paymentMethod,
         [Description("TxnID of an invoice to apply the payment to. If omitted, payment is auto-applied.")] string? invoiceTxnId = null,
-        [Description("Account to deposit funds into. If omitted, uses the default Undeposited Funds account.")] string? depositToAccount = null)
+        [Description("Account to deposit funds into (partial match OK). If omitted, uses Undeposited Funds.")] string? depositToAccount = null)
     {
+        var customerResult = resolver.ResolveCustomer(customerName);
+        if (!customerResult.Success)
+            return customerResult.ErrorMessage!;
+
         if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
             return "Error: Invalid date format. Use YYYY-MM-DD.";
+
+        string? resolvedDepositAccount = null;
+        if (!string.IsNullOrEmpty(depositToAccount))
+        {
+            var acctResult = resolver.ResolveAccount(depositToAccount);
+            if (!acctResult.Success)
+                return acctResult.ErrorMessage!;
+            resolvedDepositAccount = acctResult.ResolvedName;
+        }
 
         var result = qb.SendRequest(req =>
         {
             var payment = req.AppendReceivePaymentAddRq();
-            payment.CustomerRef.FullName.SetValue(customerName);
+            payment.CustomerRef.FullName.SetValue(customerResult.ResolvedName);
             payment.TotalAmount.SetValue(amount);
             payment.TxnDate.SetValue(parsedDate);
             payment.PaymentMethodRef.FullName.SetValue(paymentMethod);
 
-            if (!string.IsNullOrEmpty(depositToAccount))
-                payment.DepositToAccountRef.FullName.SetValue(depositToAccount);
+            if (resolvedDepositAccount != null)
+                payment.DepositToAccountRef.FullName.SetValue(resolvedDepositAccount);
 
             if (!string.IsNullOrEmpty(invoiceTxnId))
             {
@@ -61,16 +75,25 @@ public static class PaymentTools
         }, QuickBooksService.JsonOptions);
     }
 
-    [McpServerTool, Description("Write a cheque to a payee in QuickBooks Desktop.")]
+    [McpServerTool, Description("Write a cheque to a payee in QuickBooks Desktop. Payee and account names are fuzzy-matched.")]
     public static string MakeCheque(
         QuickBooksService qb,
-        [Description("Payee name exactly as it appears in QuickBooks")] string payeeName,
-        [Description("Bank account to write the cheque from")] string bankAccountName,
+        NameResolver resolver,
+        [Description("Payee name (partial match OK)")] string payeeName,
+        [Description("Bank account to write the cheque from (partial match OK)")] string bankAccountName,
         [Description("Cheque date in YYYY-MM-DD format")] string date,
         [Description("Total cheque amount")] double amount,
         [Description("Expense lines as JSON array: [{\"accountName\": \"Expenses\", \"amount\": 100.00, \"description\": \"...\"}]")] string expenseLinesJson,
         [Description("Optional cheque/reference number")] string? refNumber = null)
     {
+        var payeeResult = resolver.ResolveVendor(payeeName);
+        if (!payeeResult.Success)
+            return payeeResult.ErrorMessage!;
+
+        var bankResult = resolver.ResolveAccount(bankAccountName);
+        if (!bankResult.Success)
+            return bankResult.ErrorMessage!;
+
         if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
             return "Error: Invalid date format. Use YYYY-MM-DD.";
 
@@ -78,11 +101,19 @@ public static class PaymentTools
         if (expenseLines == null || expenseLines.Count == 0)
             return "Error: At least one expense line is required.";
 
+        foreach (var line in expenseLines)
+        {
+            var acctResult = resolver.ResolveAccount(line.AccountName);
+            if (!acctResult.Success)
+                return acctResult.ErrorMessage!;
+            line.AccountName = acctResult.ResolvedName;
+        }
+
         var result = qb.SendRequest(req =>
         {
             var check = req.AppendCheckAddRq();
-            check.PayeeEntityRef.FullName.SetValue(payeeName);
-            check.AccountRef.FullName.SetValue(bankAccountName);
+            check.PayeeEntityRef.FullName.SetValue(payeeResult.ResolvedName);
+            check.AccountRef.FullName.SetValue(bankResult.ResolvedName);
             check.TxnDate.SetValue(parsedDate);
 
             if (!string.IsNullOrEmpty(refNumber))
@@ -113,15 +144,20 @@ public static class PaymentTools
         }, QuickBooksService.JsonOptions);
     }
 
-    [McpServerTool, Description("Create a sales receipt in QuickBooks Desktop.")]
+    [McpServerTool, Description("Create a sales receipt in QuickBooks Desktop. Customer name is fuzzy-matched.")]
     public static string CreateSalesReceipt(
         QuickBooksService qb,
-        [Description("Customer name exactly as it appears in QuickBooks")] string customerName,
+        NameResolver resolver,
+        [Description("Customer name (partial match OK)")] string customerName,
         [Description("Receipt date in YYYY-MM-DD format")] string date,
         [Description("Line items as JSON array: [{\"itemName\": \"Widget\", \"description\": \"...\", \"rate\": 50.00, \"quantity\": 2}]")] string lineItemsJson,
         [Description("Payment method (e.g. Cash, Cheque, Visa)")] string paymentMethod,
         [Description("Optional reference number")] string? refNumber = null)
     {
+        var customerResult = resolver.ResolveCustomer(customerName);
+        if (!customerResult.Success)
+            return customerResult.ErrorMessage!;
+
         if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
             return "Error: Invalid date format. Use YYYY-MM-DD.";
 
@@ -132,7 +168,7 @@ public static class PaymentTools
         var result = qb.SendRequest(req =>
         {
             var receipt = req.AppendSalesReceiptAddRq();
-            receipt.CustomerRef.FullName.SetValue(customerName);
+            receipt.CustomerRef.FullName.SetValue(customerResult.ResolvedName);
             receipt.TxnDate.SetValue(parsedDate);
             receipt.PaymentMethodRef.FullName.SetValue(paymentMethod);
 

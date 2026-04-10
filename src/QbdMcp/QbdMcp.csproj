@@ -9,6 +9,7 @@
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <InternalsVisibleTo>QbdMcp.Tests</InternalsVisibleTo>
   </PropertyGroup>
 
   <ItemGroup>
